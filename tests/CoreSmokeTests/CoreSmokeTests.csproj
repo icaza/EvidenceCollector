@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Platform-neutral smoke tests for the evidence engine (hashing, audit chain, NTP maths, sealing, verification).
+    They link the same source files as the application, so they run on any OS (dotnet run in this folder).
+    No NuGet package is needed.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TestTfm Condition="'$(TestTfm)' == ''">net10.0</TestTfm>
+    <TargetFramework>$(TestTfm)</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>EvidenceCollector.Tests</RootNamespace>
+    <NoWarn>$(NoWarn);CA1416</NoWarn>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\Core\**\*.cs" Link="src\Core\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\..\Config\**\*.cs" Link="src\Config\%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="..\..\Sealing\**\*.cs" Link="src\Sealing\%(RecursiveDir)%(Filename)%(Extension)" />
+  </ItemGroup>
+
+</Project>

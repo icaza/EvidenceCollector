@@ -1,0 +1,188 @@
+{
+  // Evidence Collector configuration. Comments and trailing commas are allowed.
+  // Paths accept environment variables (%USERPROFILE%, %LOCALAPPDATA%) and forward or back slashes.
+  "$schema": "./config.schema.json",   // editor validation / auto-complete (Visual Studio, VS Code); ignored by the application
+  "schemaVersion": 1,
+
+  "ui": {
+    "theme": "Dark",                 // "Dark" or "Light"
+    "showAuditPanel": true
+  },
+
+  "paths": {
+    "outputRoot": "%USERPROFILE%/Documents/EvidenceCollector/Sessions",
+    "tempRoot": "%LOCALAPPDATA%/EvidenceCollector/Temp",
+    "webViewRuntimeFolder": ""       // optional fixed-version WebView2 runtime folder; empty = Evergreen runtime
+  },
+
+  "session": {
+    "sessionIdPrefix": "EVC",
+    "caseReference": "",
+    "operatorName": "",              // the session form is pre-filled with these values
+    "operatorTitle": "",
+    "office": "",
+    "location": "",
+    "requireCaseReference": true,
+    "requireOperatorName": true
+  },
+
+  "workflow": {
+    "enforcePhaseOrder": true,
+    "proxyPolicy": "Warn",           // Ignore | Warn | Block
+    "vpnPolicy": "Warn",
+    "hostsFilePolicy": "Warn",
+    "requirePublicIp": true,
+    "requireNtpSync": true,
+    "minimumFreeDiskMb": 500
+  },
+
+  "neutralization": {
+    "clearCache": true,
+    "clearCookies": true,
+    "clearLocalStorage": true,
+    "clearHistory": true,
+    "secureWipeTemp": true,
+    "secureWipeMaxFileMb": 256
+  },
+
+  "network": {
+    "publicIpEndpoints": [
+      "https://api.ipify.org",
+      "https://ifconfig.me/ip",
+      "https://icanhazip.com",
+      "https://checkip.amazonaws.com"
+    ],
+    "minimumAgreeingEndpoints": 2,
+    "requestTimeoutSeconds": 10,
+    "collectRawCommandOutput": true,   // ipconfig /all, netsh winhttp show proxy (fixed allow-list, not configurable)
+    "proxyTestUrl": "https://example.com/",
+    "vpnInterfaceKeywords": [
+      "vpn", "tap-windows", "tap0901", "wireguard", "wintun", "openvpn", "nordlynx", "tailscale",
+      "zerotier", "anyconnect", "globalprotect", "fortinet", "forticlient", "proton", "mullvad",
+      "warp", "pulse secure", "sonicwall", "checkpoint", "l2tp", "pptp", "sstp", "ikev2"
+    ],
+    "nonVpnTunnelKeywords": [ "teredo", "isatap", "6to4", "microsoft ip-https" ],
+    "tracerouteMaxHops": 30,
+    "tracerouteTimeoutMs": 1500
+  },
+
+  "ntp": {
+    "servers": [
+      "ntp-p1.obspm.fr",
+      "time.cloudflare.com",
+      "time.google.com",
+      "time.windows.com",
+      "pool.ntp.org"
+    ],
+    "timeoutMs": 3000,
+    "samplesPerServer": 3,
+    "minimumResponses": 2,
+    "maxAllowedOffsetMs": 1000
+  },
+
+  "webView": {
+    "forceDirectConnection": true,     // adds --no-proxy-server to the browser process
+    "inPrivateMode": true,             // InPrivate profile: nothing (cookies, cache, storage) is written to disk by the browser
+    "disableCache": true,              // every resource is fetched from the network, never from the HTTP cache
+    "language": "",                    // browser UI language (BCP-47, e.g. "en-US"); empty = runtime default
+    "blockPopupsWithoutUserGesture": true,
+    "additionalBrowserArguments": "--disable-background-networking --disable-sync",
+    "startPage": "about:blank",
+    "defaultScheme": "https",
+    "allowedSchemes": [ "http", "https" ],
+    "blockPrivateAddresses": false,
+    "allowDownloads": false,
+    "disableDevTools": true,
+    "disableContextMenu": true,
+    "userAgentOverride": "",           // empty = browser default (recommended for evidence)
+    "networkJournalMaxEntries": 4000,
+    "lowMemoryWhenMinimized": true
+  },
+
+  "capture": {
+    "waitForPageCompleteMs": 30000,    // how long a capture waits for document.readyState = "complete" before it continues anyway
+    "screenshot": {
+      "keepRawImage": true,            // also keep the unmodified PNG next to the stamped one
+      "fullPageMaxTileHeightPx": 6000,
+      "fullPageMaxTotalHeightPx": 60000,
+      "autoScrollBeforeFullPage": true, // scrolls once top-to-bottom to trigger lazy-loaded content
+      "autoScrollStepDelayMs": 250,
+      "autoScrollMaxDurationMs": 20000,
+      "overlay": {
+        "enabled": true,
+        "mode": "Band",                // Band = strip added outside the page image (hides nothing) | Overlay = drawn over the page
+        "position": "Bottom",          // Top | Bottom
+        "diagonalWatermark": true,
+        "watermarkOpacityPercent": 12,
+        "fontFamily": "Segoe UI",
+        "localTimeZoneId": "",         // time zone printed next to the UTC time (e.g. "Romance Standard Time"); empty = this PC's zone
+        "bandBackground": "#101820",
+        "bandForeground": "#FFFFFF"
+      }
+    },
+    "source": {
+      "saveRenderedDom": true,
+      "saveRawResponseBody": true,
+      "savePlainText": true,
+      "saveResponseHeaders": true,
+      "saveStylesheets": true,
+      "maxStylesheetCount": 60,
+      "maxStylesheetBytes": 5242880,
+      "saveResourceJournal": true,
+      "maxCachedBodyMb": 64            // upper bound of HTML/CSS response bodies kept in memory per page
+    },
+    "archive": {
+      "saveMhtml": true,               // single-file MHTML snapshot of the page
+      "savePdf": true,                 // PDF rendering of the page
+      "pdfPaperSize": "A4"             // "A4" or "Letter"
+    },
+    "cookies": {
+      "saveCookieList": true,
+      "storeCookieValues": false       // false = names, attributes, value length and SHA-256 of the value only (values are never written)
+    },
+    "autoCapture": {
+      "enabled": false,
+      "delayAfterLoadMs": 2000,
+      "fullPageScreenshot": true,
+      "source": true,
+      "domainRecord": true
+    },
+    "domainRecord": {
+      "includeWhois": true,
+      "includeDns": true,
+      "includeTls": true,
+      "includeTraceroute": false
+    }
+  },
+
+  "whois": {
+    "ianaServer": "whois.iana.org",
+    "port": 43,
+    "timeoutSeconds": 10,
+    "maxResponseKb": 256,
+    "useRdapFallback": true,
+    "rdapBaseUrl": "https://rdap.org"
+  },
+
+  "hashing": {
+    "algorithms": [ "SHA256" ],        // SHA256 is always computed; add "SHA512" for a second digest
+    "bufferSizeKb": 512,
+    "maxParallelism": 2
+  },
+
+  "sealing": {
+    "createZipArchive": true,
+    "verifyAfterSeal": true,           // re-hash the sealed package against its manifest right after sealing
+    "markFilesReadOnly": true,
+    "reportTitle": "Internet Evidence Collection Report",
+    "organization": "",
+    "includeThumbnails": true,
+    "thumbnailMaxWidthPx": 420
+  },
+
+  "logging": {
+    "flushEveryEntry": true,
+    "writeTextLog": true,
+    "uiMaxEntries": 5000
+  }
+}

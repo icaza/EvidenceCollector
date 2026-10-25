@@ -1,0 +1,243 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://evidence-collector.local/config.schema.json",
+  "title": "Evidence Collector configuration (config.json)",
+  "description": "Schema for editors (Visual Studio, VS Code) giving validation and auto-complete. The application clamps out-of-range values at start-up and lists every adjustment; a file that cannot be parsed is never overwritten (built-in defaults are used instead). Comments and trailing commas are allowed in config.json.",
+  "type": "object",
+  "additionalProperties": false,
+  "definitions": {
+    "policy": { "enum": ["Ignore", "Warn", "Block"], "description": "Ignore = not reported; Warn = reported, the phase can still pass; Block = the phase fails until the problem is solved." },
+    "stringList": { "type": "array", "items": { "type": "string" } }
+  },
+  "properties": {
+    "$schema": { "type": "string" },
+    "schemaVersion": { "type": "integer", "const": 1, "description": "Must be 1." },
+
+    "ui": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "theme": { "enum": ["Dark", "Light"], "description": "User-interface theme. The theme button of the application rewrites this value in place." },
+        "showAuditPanel": { "type": "boolean", "description": "Show the live audit-log panel at the bottom of the window." }
+      }
+    },
+
+    "paths": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "outputRoot": { "type": "string", "minLength": 1, "description": "Where session folders are created. %ENV% variables are expanded." },
+        "tempRoot": { "type": "string", "minLength": 1, "description": "Private working folder (browser profile, live network log). Wiped when the session ends." },
+        "webViewRuntimeFolder": { "type": "string", "description": "Optional fixed-version WebView2 runtime folder; empty = installed Evergreen runtime." }
+      }
+    },
+
+    "session": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "sessionIdPrefix": { "type": "string", "pattern": "^[A-Za-z0-9]{1,8}$", "description": "Prefix of the session identifier (letters and digits, 8 characters at most)." },
+        "caseReference": { "type": "string", "description": "Default case reference shown in the session form." },
+        "operatorName": { "type": "string" },
+        "operatorTitle": { "type": "string" },
+        "office": { "type": "string" },
+        "location": { "type": "string" },
+        "requireCaseReference": { "type": "boolean", "description": "The session form refuses an empty case reference." },
+        "requireOperatorName": { "type": "boolean", "description": "The session form refuses an empty operator name." }
+      }
+    },
+
+    "workflow": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "enforcePhaseOrder": { "type": "boolean", "description": "Phase N can only be opened once phase N-1 passed." },
+        "proxyPolicy": { "$ref": "#/definitions/policy", "description": "System proxy detected." },
+        "vpnPolicy": { "$ref": "#/definitions/policy", "description": "VPN / tunnel adapter detected." },
+        "hostsFilePolicy": { "$ref": "#/definitions/policy", "description": "Custom entries in the hosts file." },
+        "requirePublicIp": { "type": "boolean", "description": "Phase 2 fails when the public IP address cannot be confirmed." },
+        "requireNtpSync": { "type": "boolean", "description": "Phase 1 / sealing fail when the clock cannot be synchronised." },
+        "minimumFreeDiskMb": { "type": "integer", "minimum": 0, "maximum": 10000000, "description": "Minimum free disk space on the output drive." }
+      }
+    },
+
+    "neutralization": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "clearCache": { "type": "boolean" },
+        "clearCookies": { "type": "boolean" },
+        "clearLocalStorage": { "type": "boolean", "description": "Local and session storage, IndexedDB, service workers." },
+        "clearHistory": { "type": "boolean" },
+        "secureWipeTemp": { "type": "boolean", "description": "Overwrite temporary files before deleting them (best effort; not guaranteed on SSD)." },
+        "secureWipeMaxFileMb": { "type": "integer", "minimum": 0, "maximum": 4096, "description": "Larger files are deleted without being overwritten." }
+      }
+    },
+
+    "network": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "publicIpEndpoints": { "type": "array", "minItems": 1, "items": { "type": "string", "pattern": "^https://" }, "description": "HTTPS endpoints that return the caller's IP address as plain text." },
+        "minimumAgreeingEndpoints": { "type": "integer", "minimum": 1, "maximum": 10, "description": "How many endpoints must return the same address." },
+        "requestTimeoutSeconds": { "type": "integer", "minimum": 2, "maximum": 120 },
+        "collectRawCommandOutput": { "type": "boolean", "description": "Record the literal output of ipconfig /all and netsh winhttp show proxy." },
+        "proxyTestUrl": { "type": "string", "description": "URL used to resolve the effective system proxy." },
+        "vpnInterfaceKeywords": { "$ref": "#/definitions/stringList", "description": "Case-insensitive words that identify a VPN adapter." },
+        "nonVpnTunnelKeywords": { "$ref": "#/definitions/stringList", "description": "Tunnel adapters that are not a VPN (Teredo, ISATAP…)." },
+        "tracerouteMaxHops": { "type": "integer", "minimum": 1, "maximum": 64 },
+        "tracerouteTimeoutMs": { "type": "integer", "minimum": 200, "maximum": 10000 }
+      }
+    },
+
+    "ntp": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "servers": { "type": "array", "minItems": 1, "items": { "type": "string" }, "description": "NTP servers queried (several independent sources are compared)." },
+        "timeoutMs": { "type": "integer", "minimum": 500, "maximum": 30000 },
+        "samplesPerServer": { "type": "integer", "minimum": 1, "maximum": 8 },
+        "minimumResponses": { "type": "integer", "minimum": 1, "maximum": 10, "description": "Servers that must answer for the synchronisation to count." },
+        "maxAllowedOffsetMs": { "type": "integer", "minimum": 10, "maximum": 600000, "description": "A larger PC-clock error is reported as a warning (the clock is never modified)." }
+      }
+    },
+
+    "webView": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "forceDirectConnection": { "type": "boolean", "description": "Starts the browser with --no-proxy-server." },
+        "inPrivateMode": { "type": "boolean", "description": "InPrivate profile: nothing is written to disk by the browser." },
+        "disableCache": { "type": "boolean", "description": "Every resource is fetched from the network." },
+        "language": { "type": "string", "description": "Browser UI language (BCP-47, e.g. en-US); empty = runtime default." },
+        "blockPopupsWithoutUserGesture": { "type": "boolean" },
+        "additionalBrowserArguments": { "type": "string", "description": "Extra Chromium command-line arguments." },
+        "startPage": { "type": "string" },
+        "defaultScheme": { "enum": ["http", "https"], "description": "Scheme added when the operator types a bare host name." },
+        "allowedSchemes": { "type": "array", "minItems": 1, "items": { "enum": ["http", "https"] }, "uniqueItems": true },
+        "blockPrivateAddresses": { "type": "boolean", "description": "Refuse navigation to loopback / private network addresses." },
+        "allowDownloads": { "type": "boolean", "description": "Downloads are refused by default (they are not part of the evidence package)." },
+        "disableDevTools": { "type": "boolean" },
+        "disableContextMenu": { "type": "boolean" },
+        "userAgentOverride": { "type": "string", "description": "Empty = browser default (recommended for evidence)." },
+        "networkJournalMaxEntries": { "type": "integer", "minimum": 100, "maximum": 100000 },
+        "lowMemoryWhenMinimized": { "type": "boolean" }
+      }
+    },
+
+    "capture": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "waitForPageCompleteMs": { "type": "integer", "minimum": 0, "maximum": 120000, "description": "How long a capture waits for the page to finish loading." },
+        "screenshot": {
+          "type": "object", "additionalProperties": false,
+          "properties": {
+            "keepRawImage": { "type": "boolean", "description": "Also keep the unmodified PNG next to the stamped one." },
+            "fullPageMaxTileHeightPx": { "type": "integer", "minimum": 500, "maximum": 12000 },
+            "fullPageMaxTotalHeightPx": { "type": "integer", "minimum": 1000, "maximum": 400000 },
+            "autoScrollBeforeFullPage": { "type": "boolean", "description": "Scroll once from top to bottom to trigger lazy-loaded content." },
+            "autoScrollStepDelayMs": { "type": "integer", "minimum": 50, "maximum": 5000 },
+            "autoScrollMaxDurationMs": { "type": "integer", "minimum": 1000, "maximum": 120000 },
+            "overlay": {
+              "type": "object", "additionalProperties": false,
+              "properties": {
+                "enabled": { "type": "boolean" },
+                "mode": { "enum": ["Band", "Overlay"], "description": "Band = strip added outside the page image (hides nothing); Overlay = drawn over the page." },
+                "position": { "enum": ["Top", "Bottom"] },
+                "diagonalWatermark": { "type": "boolean" },
+                "watermarkOpacityPercent": { "type": "integer", "minimum": 0, "maximum": 60 },
+                "fontFamily": { "type": "string" },
+                "localTimeZoneId": { "type": "string", "description": "Time zone printed next to the UTC time; empty = this PC's zone." },
+                "bandBackground": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+                "bandForeground": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" }
+              }
+            }
+          }
+        },
+        "source": {
+          "type": "object", "additionalProperties": false,
+          "properties": {
+            "saveRenderedDom": { "type": "boolean" },
+            "saveRawResponseBody": { "type": "boolean", "description": "The HTML exactly as received from the server." },
+            "savePlainText": { "type": "boolean" },
+            "saveResponseHeaders": { "type": "boolean" },
+            "saveStylesheets": { "type": "boolean" },
+            "maxStylesheetCount": { "type": "integer", "minimum": 0, "maximum": 500 },
+            "maxStylesheetBytes": { "type": "integer", "minimum": 1024, "maximum": 52428800 },
+            "saveResourceJournal": { "type": "boolean" },
+            "maxCachedBodyMb": { "type": "integer", "minimum": 1, "maximum": 512 }
+          }
+        },
+        "archive": {
+          "type": "object", "additionalProperties": false,
+          "properties": {
+            "saveMhtml": { "type": "boolean" },
+            "savePdf": { "type": "boolean" },
+            "pdfPaperSize": { "enum": ["A4", "Letter"] }
+          }
+        },
+        "cookies": {
+          "type": "object", "additionalProperties": false,
+          "properties": {
+            "saveCookieList": { "type": "boolean" },
+            "storeCookieValues": { "type": "boolean", "description": "false = only names, attributes, value length and SHA-256 of the value are stored." }
+          }
+        },
+        "autoCapture": {
+          "type": "object", "additionalProperties": false,
+          "properties": {
+            "enabled": { "type": "boolean", "description": "Capture automatically each time a page finished loading." },
+            "delayAfterLoadMs": { "type": "integer", "minimum": 0, "maximum": 60000 },
+            "fullPageScreenshot": { "type": "boolean" },
+            "source": { "type": "boolean" },
+            "domainRecord": { "type": "boolean" }
+          }
+        },
+        "domainRecord": {
+          "type": "object", "additionalProperties": false,
+          "properties": {
+            "includeWhois": { "type": "boolean" },
+            "includeDns": { "type": "boolean" },
+            "includeTls": { "type": "boolean" },
+            "includeTraceroute": { "type": "boolean" }
+          }
+        }
+      }
+    },
+
+    "whois": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "ianaServer": { "type": "string" },
+        "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
+        "timeoutSeconds": { "type": "integer", "minimum": 2, "maximum": 60 },
+        "maxResponseKb": { "type": "integer", "minimum": 4, "maximum": 4096 },
+        "useRdapFallback": { "type": "boolean" },
+        "rdapBaseUrl": { "type": "string" }
+      }
+    },
+
+    "hashing": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "algorithms": { "type": "array", "items": { "enum": ["SHA256", "SHA512", "SHA-256", "SHA-512"] }, "uniqueItems": true, "description": "SHA-256 is always computed; add SHA512 for a second digest." },
+        "bufferSizeKb": { "type": "integer", "minimum": 16, "maximum": 8192 },
+        "maxParallelism": { "type": "integer", "minimum": 1, "maximum": 16 }
+      }
+    },
+
+    "sealing": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "createZipArchive": { "type": "boolean" },
+        "verifyAfterSeal": { "type": "boolean" },
+        "markFilesReadOnly": { "type": "boolean" },
+        "reportTitle": { "type": "string" },
+        "organization": { "type": "string" },
+        "includeThumbnails": { "type": "boolean" },
+        "thumbnailMaxWidthPx": { "type": "integer", "minimum": 50, "maximum": 4000 }
+      }
+    },
+
+    "logging": {
+      "type": "object", "additionalProperties": false,
+      "properties": {
+        "flushEveryEntry": { "type": "boolean", "description": "Flush the audit log to disk after every entry (safest)." },
+        "writeTextLog": { "type": "boolean", "description": "Also write a human-readable audit.log next to audit.jsonl." },
+        "uiMaxEntries": { "type": "integer", "minimum": 200, "maximum": 100000 }
+      }
+    }
+  }
+}

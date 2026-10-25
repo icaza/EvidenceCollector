@@ -1,0 +1,91 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+
+    <RootNamespace>EvidenceCollector</RootNamespace>
+    <AssemblyName>EvidenceCollector</AssemblyName>
+    <Product>Evidence Collector</Product>
+    <Description>Internet evidence collection tool following the AFNOR NF Z67-147 methodology</Description>
+    <Version>1.0.0</Version>
+
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Deterministic>true</Deterministic>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+
+    <!-- WinForms application bootstrap (generates ApplicationConfiguration.Initialize()) -->
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+    <ApplicationVisualStyles>true</ApplicationVisualStyles>
+    <ApplicationUseCompatibleTextRendering>false</ApplicationUseCompatibleTextRendering>
+    <ForceDesignerDpiUnaware>true</ForceDesignerDpiUnaware>
+
+    <!-- Small footprint: workstation, non-concurrent GC; no localized satellite folders -->
+    <ServerGarbageCollector>false</ServerGarbageCollector>
+    <ConcurrentGarbageCollection>false</ConcurrentGarbageCollection>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+
+    <!-- Allows "dotnet build" from a non-Windows CI machine; harmless on Windows -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+
+    <SupportedOSPlatformVersion>10.0.17763.0</SupportedOSPlatformVersion>
+
+    <AssemblyVersion></AssemblyVersion>
+
+    <FileVersion></FileVersion>
+
+    <ApplicationIcon>ico\icoico.ico</ApplicationIcon>
+
+    <Platforms>AnyCPU;x64</Platforms>
+
+    <NoWarn>$(NoWarn);MSB3277</NoWarn>
+
+    <Company>ICAZA MEDIA</Company>
+
+    <Authors>ICAZA</Authors>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DebugType>none</DebugType>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <DebugType>none</DebugType>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DebugType>none</DebugType>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <DebugType>none</DebugType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="tests/**" />
+    <None Remove="tests/**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="ico\icoico.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4314.35" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="config.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="config.schema.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>
